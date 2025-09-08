@@ -71,15 +71,15 @@
 
         console.log(response);
 
-        let str = "";
-
         if (response.status === "ok" && response.articles) {
+          let str = "";
           for (let item of response.articles) {
+            let aiDescription = await getAIDescription(item.title || "No title");
             str += `<div class="card my-4 mx-2" style="width: 18rem;">
               <img src="${item.urlToImage || ''}" class="card-img-top" alt="news image">
               <div class="card-body">
                 <h5 class="card-title">${item.title || 'No title'}</h5>
-                <p class="card-text">${item.description || 'No description available'}</p>
+                <p class="card-text">${aiDescription}</p>
                 <a href="${item.url}" target="_blank" class="btn btn-primary">Read more</a>
               </div>
             </div>`;
@@ -124,6 +124,26 @@
 
     // load first page
     fetchNews(currentPage);
+
+    async function getAIDescription(title) {
+      try {
+        const response = await fetch("http://localhost:3001/ai-description", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title })
+        });
+        const data = await response.json();
+        if (data.aiText) {
+          return data.aiText;
+        } else if (data.error) {
+          return `AI Error: ${data.error}`;
+        } else {
+          return "No AI description available.";
+        }
+      } catch (err) {
+        return `Fetch error: ${err.message}`;
+      }
+    }
   </script>
 </body>
 </html>
